@@ -49,7 +49,7 @@ class ModelGauntlet(Callback):
                  subtract_random_baseline: bool = True,
                  rescale_accuracy: bool = True,
                  benchmark_sizes: Optional[dict] = None):
-        if weighting != Weighting.EQUAL and benchmark_sizes is None:
+        if Weighting[weighting] != Weighting.EQUAL and benchmark_sizes is None:
             raise Exception(
                 'When not using equal weighting, you must provide the benchmark sizes.'
             )
@@ -69,16 +69,17 @@ class ModelGauntlet(Callback):
 
             for benchmark in category['benchmarks']:
                 bench_name = f"{benchmark['name']}/{benchmark['num_fewshot']}-shot"
-                cumulative_samples = max(
-                    sum(count for name, count in benchmark_sizes.items()
-                        if name.startswith(bench_name)), 1)
 
                 if self.weighting == Weighting.EQUAL:
                     weight = 1
-                elif self.weighting == Weighting.SAMPLE_SZ:
-                    weight = cumulative_samples
-                elif self.weighting == Weighting.LOG_SAMPLE_SZ:
-                    weight = max(math.log(cumulative_samples, 2), 1)
+                else:
+                    cumulative_samples = max(
+                        sum(count for name, count in benchmark_sizes.items()
+                            if name.startswith(bench_name)), 1)
+                    if self.weighting == Weighting.SAMPLE_SZ:
+                        weight = cumulative_samples
+                    elif self.weighting == Weighting.LOG_SAMPLE_SZ:
+                        weight = max(math.log(cumulative_samples, 2), 1)
 
                 benchmark['weighting'] = weight
 
