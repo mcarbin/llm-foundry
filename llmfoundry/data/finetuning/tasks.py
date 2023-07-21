@@ -41,6 +41,8 @@ from omegaconf import DictConfig
 from streaming import StreamingDataset
 from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
 
+from llmfoundry.data.finetuning.chatml import ChatMLFormatter
+
 __all__ = ['dataset_constructor']
 
 Tokenizer = Union[PreTrainedTokenizer, PreTrainedTokenizerFast]
@@ -367,4 +369,20 @@ def muennighoff_tokenize_function(inp: Dict):
     except Exception as e:
         raise ValueError(
             f'Unable to process prompt/response from {inp=}') from e
+    return {'prompt': prompt, 'response': response}
+
+
+@dataset_constructor.register('Open-Orca/OpenOrca')
+def open_orca_chatml(inp: Dict):
+    """Split out prompt/response in ChatML from Orca format."""
+    try:
+        system = inp['system_prompt']
+        question = inp['question']
+        response = inp['response']
+        chatml_formatter = ChatMLFormatter(system=system)
+        prompt = chatml_formatter.as_string([[question, ""]])
+        response = chatml_formatter.format_response(response)
+    except Exception as e:
+        raise ValueError(
+            f"Unable to extract prompt/response from {inp=}") from e
     return {'prompt': prompt, 'response': response}
