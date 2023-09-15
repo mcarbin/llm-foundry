@@ -17,7 +17,7 @@ from omegaconf import DictConfig, ListConfig
 from omegaconf import OmegaConf as om
 from transformers import (AutoModelForCausalLM, PreTrainedTokenizerBase,
                           T5ForConditionalGeneration)
-
+from composer.callbacks import MemoryMonitor
 from llmfoundry.models import MPTForCausalLM
 from llmfoundry.models.model_registry import COMPOSER_MODEL_REGISTRY
 from llmfoundry.utils.builders import (build_icl_data_and_gauntlet,
@@ -112,7 +112,7 @@ def evaluate_model(model_cfg: DictConfig, dist_timeout: Union[float, int],
         icl_tasks, eval_gauntlet_config, tokenizer, device_eval_batch_size,
         max_seq_len, icl_subset_num_batches)
 
-    callbacks = []
+    callbacks = [MemoryMonitor()]
     if eval_gauntlet_callback is not None:
         callbacks.append(eval_gauntlet_callback)
 
